@@ -616,3 +616,24 @@ model Review {
   @@unique([userId, productId])
   @@index([productId])
 }
+// ==========================================
+// SLIDER IMAGE
+// ==========================================
+// Homepage hero carousel, fully admin-managed (/admin/sliders). `link` is
+// nullable on purpose: a slide with no link renders as a plain,
+// non-clickable image instead of navigating anywhere. `sortOrder` controls
+// slide order; `isActive` lets an admin pull a slide from rotation without
+// deleting it.
+model SliderImage {
+  id String @id @default(cuid())
+
+  url  String
+  alt  String?
+  link String?
+
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

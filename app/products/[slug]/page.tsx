@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getProductBySlug } from "@/lib/queries/product-detail";
 import { getProductReviews } from "@/lib/queries/reviews";
 import { VariantSelector } from "@/components/variant-selector";
 import { WishlistButton } from "@/components/wishlist-button";
+import { ProductGallery } from "@/components/product-gallery";
 import { ReviewsSection } from "@/components/reviews-section";
 
 type Params = Promise<{ slug: string }>;
@@ -40,44 +40,39 @@ export default async function ProductPage({ params }: { params: Params }) {
     optionValueIds: v.optionValues.map((ov) => ov.optionValueId),
   }));
 
-  const primaryImage = product.images.find((img) => img.isPrimary) ?? product.images[0];
-
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="grid gap-10 lg:grid-cols-2">
-        <div className="relative aspect-square overflow-hidden rounded-lg border border-steel/15 bg-steel/5">
-          {primaryImage ? (
-            <Image
-              src={primaryImage.url}
-              alt={primaryImage.alt ?? product.nameEn}
-              fill
-              className="object-cover"
-              sizes="(min-width: 1024px) 40vw, 90vw"
-              priority
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-steel">No image</div>
-          )}
-        </div>
+        <ProductGallery images={product.images} productName={product.nameEn} />
 
         <div>
           {product.brand && (
-            <p className="font-mono text-xs uppercase tracking-wide text-steel">{product.brand.name}</p>
+            <p className="font-mono text-xs uppercase tracking-wide text-steel">
+              {product.brand.name}
+            </p>
           )}
 
           <div className="mt-1 flex items-start justify-between gap-4">
-            <h1 className="font-display text-2xl font-bold text-ink">{product.nameEn}</h1>
-            <WishlistButton productId={product.id} initialSaved={initialSaved} />
+            <h1 className="font-display text-2xl font-bold text-ink">
+              {product.nameEn}
+            </h1>
+            <WishlistButton
+              productId={product.id}
+              initialSaved={initialSaved}
+            />
           </div>
 
           {reviews.total > 0 && (
             <p className="mt-2 text-sm text-steel">
-              ★ {reviews.average.toFixed(1)} · {reviews.total} review{reviews.total === 1 ? "" : "s"}
+              ★ {reviews.average.toFixed(1)} · {reviews.total} review
+              {reviews.total === 1 ? "" : "s"}
             </p>
           )}
 
           {product.descriptionEn && (
-            <p className="mt-4 text-sm leading-relaxed text-steel">{product.descriptionEn}</p>
+            <p className="mt-4 text-sm leading-relaxed text-steel">
+              {product.descriptionEn}
+            </p>
           )}
 
           <div className="mt-6">

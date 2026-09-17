@@ -11,7 +11,10 @@ export async function getProductBySlug(slug: string) {
       slug: true,
       category: { select: { nameEn: true, slug: true } },
       brand: { select: { name: true, slug: true } },
-      images: { orderBy: { sortOrder: "asc" }, select: { url: true, alt: true, isPrimary: true } },
+      images: {
+        orderBy: { sortOrder: "asc" },
+        select: { id: true, url: true, alt: true, isPrimary: true },
+      },
       options: {
         select: {
           id: true,

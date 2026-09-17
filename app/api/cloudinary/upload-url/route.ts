@@ -3,6 +3,8 @@ import { requireUser } from "@/lib/require-user";
 import { requireAdmin } from "@/lib/require-admin";
 import { uploadFromUrl, CloudinaryError } from "@/lib/cloudinary";
 
+const ADMIN_ONLY_FOLDERS = new Set(["products", "sliders"]);
+
 // رفع من رابط جاهز (مش ملف من جهاز اليوزر) — الحمولة هنا مجرد نص
 // (الرابط)، فمفيش مشكلة حجم body زي رفع الملفات، وبيعدي من عندنا عادي.
 export async function POST(request: NextRequest) {
@@ -13,10 +15,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const folder = body.folder === "products" ? "products" : "avatars";
+  const folder = ADMIN_ONLY_FOLDERS.has(body.folder ?? "")
+    ? (body.folder as string)
+    : "avatars";
 
-  const { error } =
-    folder === "products" ? await requireAdmin() : await requireUser();
+  const { error } = ADMIN_ONLY_FOLDERS.has(folder)
+    ? await requireAdmin()
+    : await requireUser();
   if (error) return error;
 
   if (!body.url) {

@@ -49,8 +49,11 @@ export function ProductForm({
   function field(key: keyof FormData) {
     return {
       value: form[key] ?? "",
-      onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-        setForm((prev) => ({ ...prev, [key]: e.target.value })),
+      onChange: (
+        e: React.ChangeEvent<
+          HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+        >,
+      ) => setForm((prev) => ({ ...prev, [key]: e.target.value })),
     };
   }
 
@@ -103,7 +106,9 @@ export function ProductForm({
 
       if (!variantRes.ok) {
         const vBody = await variantRes.json().catch(() => ({}));
-        setError(`Product created, but the variant failed: ${vBody.error ?? "unknown error"}`);
+        setError(
+          `Product created, but the variant failed: ${vBody.error ?? "unknown error"}`,
+        );
         setSubmitting(false);
         return;
       }
@@ -128,18 +133,44 @@ export function ProductForm({
 
   return (
     <form onSubmit={handleSubmit} className="mt-6 grid grid-cols-2 gap-4">
-      <input required placeholder="Name (EN)" {...field("nameEn")} className="rounded-md border border-steel/25 px-3 py-2 text-sm" />
-      <input required placeholder="الاسم (عربي)" dir="rtl" {...field("nameAr")} className="rounded-md border border-steel/25 px-3 py-2 text-sm" />
+      <input
+        required
+        placeholder="Name (EN)"
+        {...field("nameEn")}
+        className="rounded-md border border-steel/25 px-3 py-2 text-sm"
+      />
+      <input
+        required
+        placeholder="الاسم (عربي)"
+        dir="rtl"
+        {...field("nameAr")}
+        className="rounded-md border border-steel/25 px-3 py-2 text-sm"
+      />
       <input
         required
         placeholder="slug"
         {...field("slug")}
         className="col-span-2 rounded-md border border-steel/25 px-3 py-2 font-mono text-sm"
       />
-      <textarea placeholder="Description (EN)" rows={3} {...field("descriptionEn")} className="rounded-md border border-steel/25 px-3 py-2 text-sm" />
-      <textarea placeholder="الوصف (عربي)" dir="rtl" rows={3} {...field("descriptionAr")} className="rounded-md border border-steel/25 px-3 py-2 text-sm" />
+      <textarea
+        placeholder="Description (EN)"
+        rows={3}
+        {...field("descriptionEn")}
+        className="rounded-md border border-steel/25 px-3 py-2 text-sm"
+      />
+      <textarea
+        placeholder="الوصف (عربي)"
+        dir="rtl"
+        rows={3}
+        {...field("descriptionAr")}
+        className="rounded-md border border-steel/25 px-3 py-2 text-sm"
+      />
 
-      <select required {...field("categoryId")} className="rounded-md border border-steel/25 px-3 py-2 text-sm">
+      <select
+        required
+        {...field("categoryId")}
+        className="rounded-md border border-steel/25 px-3 py-2 text-sm"
+      >
         <option value="">Select category…</option>
         {categories.map((c) => (
           <option key={c.id} value={c.id}>
@@ -148,7 +179,10 @@ export function ProductForm({
         ))}
       </select>
 
-      <select {...field("brandId")} className="rounded-md border border-steel/25 px-3 py-2 text-sm">
+      <select
+        {...field("brandId")}
+        className="rounded-md border border-steel/25 px-3 py-2 text-sm"
+      >
         <option value="">No brand</option>
         {brands.map((b) => (
           <option key={b.id} value={b.id}>
@@ -160,7 +194,8 @@ export function ProductForm({
       {!isEdit && (
         <>
           <p className="col-span-2 mt-2 text-xs font-medium uppercase tracking-wide text-steel">
-            Default variant (optional — leave blank to configure options/variants after creating)
+            Default variant (optional — leave blank to configure
+            options/variants after creating)
           </p>
           <input
             placeholder="SKU"
@@ -174,7 +209,9 @@ export function ProductForm({
             step="0.01"
             placeholder="Price"
             value={variant.price}
-            onChange={(e) => setVariant((p) => ({ ...p, price: e.target.value }))}
+            onChange={(e) =>
+              setVariant((p) => ({ ...p, price: e.target.value }))
+            }
             className="rounded-md border border-steel/25 px-3 py-2 text-sm"
           />
           <input
@@ -183,7 +220,9 @@ export function ProductForm({
             step="1"
             placeholder="Stock"
             value={variant.stock}
-            onChange={(e) => setVariant((p) => ({ ...p, stock: e.target.value }))}
+            onChange={(e) =>
+              setVariant((p) => ({ ...p, stock: e.target.value }))
+            }
             className="col-span-2 rounded-md border border-steel/25 px-3 py-2 text-sm"
           />
         </>
@@ -196,13 +235,19 @@ export function ProductForm({
         disabled={submitting}
         className="col-span-2 rounded-md bg-signal py-2.5 text-sm font-semibold text-ink disabled:opacity-40"
       >
-        {submitting ? "Saving…" : saved ? "Saved ✓" : isEdit ? "Save Changes" : "Create Product"}
+        {submitting
+          ? "Saving…"
+          : saved
+            ? "Saved ✓"
+            : isEdit
+              ? "Save Changes"
+              : "Create Product"}
       </button>
 
       {!isEdit && (
         <p className="col-span-2 text-xs text-steel">
-          Fill the SKU above for one simple variant, or leave it blank and add proper
-          option-based variants (color × storage, etc.) on the next page.
+          Fill the SKU above for one simple variant, or leave it blank and add
+          proper option-based variants (color × storage, etc.) on the next page.
         </p>
       )}
     </form>

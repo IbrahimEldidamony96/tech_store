@@ -6,7 +6,7 @@ import Image from "next/image";
 type Props = {
   value: string;
   onChange: (url: string) => void;
-  folder?: "avatars" | "products";
+  folder?: "avatars" | "products" | "sliders";
   previewClassName?: string;
   size?: number;
 };

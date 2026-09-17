@@ -8,8 +8,10 @@ import {
 } from "@/lib/cloudinary";
 
 // بيولّد توقيع للرفع المباشر من المتصفح لـ Cloudinary (من غير ما الملف
-// يعدي على السيرفر بتاعنا خالص). "products" فولدر محجوز للأدمن بس —
-// أي حد تاني بيرفع في "avatars" بتاعته بس.
+// يعدي على السيرفر بتاعنا خالص). "products" و"sliders" فولدرات محجوزة
+// للأدمن بس — أي حد تاني بيرفع في "avatars" بتاعته بس.
+const ADMIN_ONLY_FOLDERS = new Set(["products", "sliders"]);
+
 export async function POST(request: NextRequest) {
   let body: { folder?: string };
   try {
@@ -18,10 +20,13 @@ export async function POST(request: NextRequest) {
     body = {};
   }
 
-  const folder = body.folder === "products" ? "products" : "avatars";
+  const folder = ADMIN_ONLY_FOLDERS.has(body.folder ?? "")
+    ? (body.folder as string)
+    : "avatars";
 
-  const { error } =
-    folder === "products" ? await requireAdmin() : await requireUser();
+  const { error } = ADMIN_ONLY_FOLDERS.has(folder)
+    ? await requireAdmin()
+    : await requireUser();
   if (error) return error;
 
   try {

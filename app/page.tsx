@@ -1,34 +1,59 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getProductList } from "@/lib/queries/products";
+import { getActiveSlidersForHomepage } from "@/lib/queries/sliders";
 import { ProductCard } from "@/components/product-card";
+import { HeroSlider } from "@/components/hero-slider";
 
-type SearchParams = Promise<{ category?: string; search?: string; page?: string }>;
+type SearchParams = Promise<{
+  category?: string;
+  search?: string;
+  page?: string;
+}>;
 
-export default async function HomePage({ searchParams }: { searchParams: SearchParams }) {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const params = await searchParams;
   const page = Number(params.page) || 1;
 
-  const [{ items, totalPages }, categories] = await Promise.all([
-    getProductList({ category: params.category, search: params.search, page, limit: 12 }),
+  const [{ items, totalPages }, categories, slides] = await Promise.all([
+    getProductList({
+      category: params.category,
+      search: params.search,
+      page,
+      limit: 12,
+    }),
     prisma.category.findMany({
       where: { parentId: null },
       orderBy: { nameEn: "asc" },
       select: { id: true, nameEn: true, slug: true },
     }),
+    getActiveSlidersForHomepage(),
   ]);
 
   // Prisma.Decimal مش نوع UI-friendly — نحوله لـ number صريح هنا في
   // طبقة الصفحة، عشان ProductCard يفضل component بسيط بأنواع JS عادية
   const products = items.map((product) => ({
     ...product,
-    variants: product.variants.map((v) => ({ price: v.price.toNumber(), stock: v.stock })),
+    variants: product.variants.map((v) => ({
+      price: v.price.toNumber(),
+      stock: v.stock,
+    })),
   }));
 
   const activeCategory = params.category;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+      {slides.length > 0 && (
+        <div className="mb-8">
+          <HeroSlider slides={slides} />
+        </div>
+      )}
+
       <div className="mb-8 flex flex-wrap items-center gap-2">
         <Link
           href="/"

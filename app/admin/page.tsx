@@ -53,6 +53,17 @@ export default async function AdminHomePage() {
             Set Bosta&apos;s per-governorate fee
           </p>
         </Link>
+        <Link
+          href="/admin/sliders"
+          className="rounded-lg border border-steel/15 p-5 hover:border-ink"
+        >
+          <h2 className="font-display font-semibold text-ink">
+            Homepage Slider
+          </h2>
+          <p className="mt-1 text-sm text-steel">
+            Manage the homepage image carousel
+          </p>
+        </Link>
       </div>
     </div>
   );

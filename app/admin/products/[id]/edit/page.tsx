@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getProductForAdminEdit } from "@/lib/queries/admin-products";
 import { ProductForm } from "@/components/admin/product-form";
 import { ProductVariantsSection } from "@/components/admin/product-variants-section";
+import { ProductImagesManager } from "@/components/admin/product-images-manager";
 
 type Params = Promise<{ id: string }>;
 
@@ -15,8 +16,14 @@ export default async function EditProductPage({ params }: { params: Params }) {
 
   const [product, categories, brands, options, variants] = await Promise.all([
     getProductForAdminEdit(id),
-    prisma.category.findMany({ orderBy: { nameEn: "asc" }, select: { id: true, nameEn: true } }),
-    prisma.brand.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.category.findMany({
+      orderBy: { nameEn: "asc" },
+      select: { id: true, nameEn: true },
+    }),
+    prisma.brand.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
     prisma.productOption.findMany({
       where: { productId: id },
       orderBy: { createdAt: "asc" },
@@ -36,7 +43,9 @@ export default async function EditProductPage({ params }: { params: Params }) {
         price: true,
         stock: true,
         isActive: true,
-        optionValues: { select: { optionValue: { select: { valueEn: true } } } },
+        optionValues: {
+          select: { optionValue: { select: { valueEn: true } } },
+        },
       },
     }),
   ]);
@@ -50,7 +59,9 @@ export default async function EditProductPage({ params }: { params: Params }) {
     price: v.price.toNumber(),
     stock: v.stock,
     isActive: v.isActive,
-    optionSummary: v.optionValues.map((ov) => ov.optionValue.valueEn).join(" / "),
+    optionSummary: v.optionValues
+      .map((ov) => ov.optionValue.valueEn)
+      .join(" / "),
   }));
 
   return (
@@ -70,7 +81,15 @@ export default async function EditProductPage({ params }: { params: Params }) {
           brandId: product.brandId ?? "",
         }}
       />
-      <ProductVariantsSection productId={product.id} initialOptions={options} initialVariants={mappedVariants} />
+      <ProductImagesManager
+        productId={product.id}
+        initialImages={product.images}
+      />
+      <ProductVariantsSection
+        productId={product.id}
+        initialOptions={options}
+        initialVariants={mappedVariants}
+      />
     </div>
   );
 }

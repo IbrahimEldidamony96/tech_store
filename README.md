@@ -1,6 +1,6 @@
 # Tech Store
 
-A full-stack bilingual (EN/AR) e-commerce platform built to demonstrate production-grade full-stack architecture: authentication & RBAC, cart/wishlist, checkout with atomic stock handling, a payment/shipment state machine, verified-purchase reviews, and a full admin dashboard.
+A full-stack bilingual (EN/AR) e-commerce platform built to demonstrate production-grade full-stack architecture: authentication & RBAC, cart/wishlist, checkout with atomic stock handling, a payment/shipment state machine, verified-purchase reviews, product image galleries, a homepage slider, and a full admin dashboard.
 
 ## Tech Stack
 
@@ -17,12 +17,15 @@ A full-stack bilingual (EN/AR) e-commerce platform built to demonstrate producti
 ## Features
 
 - **Catalog** — categories (with hierarchy), brands, products with option/value/variant support (e.g. size × color)
+- **Product Images** — admin-managed gallery per product (`/admin/products/[id]/edit`): upload via Cloudinary, reorder, set primary, delete — first image auto-promotes to primary, and deleting the primary auto-promotes the next one, since storefront cards/cart/wishlist only ever query the primary image
+- **Storefront gallery** — product detail page shows the primary image large with a clickable thumbnail strip for the rest
+- **Homepage Slider** — admin-managed image carousel (`/admin/sliders`): each slide has an optional link (internal path or external URL); a slide with no link renders as a plain, non-clickable image. Responsive crossfade carousel, auto-advances every 5s, pauses on hover/focus
 - **Auth & RBAC** — Google OAuth + email/password, JWT sessions, admin-only routes enforced in `proxy.ts` (Next.js 16's middleware convention)
 - **Cart & Wishlist** — IDOR-protected, optimistic UI updates
-- **Checkout** — atomic stock decrement via Prisma transactions, coupon validation, real Bosta-tied shipping cost calculated before the order is placed
+- **Checkout** — atomic stock decrement via Prisma transactions, coupon validation, live Bosta-backed shipping cost (see Shipping section)
 - **Orders** — payment/shipment state machine with guarded transitions (`canTransitionOrder`, `canTransitionPayment`, `canTransitionShipment`)
 - **Reviews** — five-condition verified-purchase check before a review is allowed
-- **Admin dashboard** — full CRUD for products, categories, brands, options, values, variants, and per-governorate shipping rates
+- **Admin dashboard** — full CRUD for products (incl. images), categories, brands, options, values, variants, shipping rates, and the homepage slider
 
 ## Prerequisites
 
@@ -59,24 +62,28 @@ App runs at `http://localhost:3000`.
 
 ## Environment Variables
 
-| Variable                       | Description                                                                                                                                  | Example                                           |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `DATABASE_URL`                 | Postgres connection string                                                                                                                   | `postgresql://user:pass@localhost:5432/techstore` |
-| `AUTH_SECRET`                  | Encrypts Auth.js JWTs/cookies. **Must be named `AUTH_SECRET`**, not `BETTER_AUTH_SECRET`                                                     | generate below                                    |
-| `AUTH_GOOGLE_ID`               | Google OAuth Client ID                                                                                                                       | from Google Cloud Console                         |
-| `AUTH_GOOGLE_SECRET`           | Google OAuth Client Secret                                                                                                                   | from Google Cloud Console                         |
-| `BOSTA_API_KEY`                | Bosta business API key                                                                                                                       | from business.bosta.co → API settings             |
-| `BOSTA_BASE_URL`               | Bosta API base URL (optional, defaults to production)                                                                                        | `https://stg-app.bosta.co` for testing            |
-| `BOSTA_WEBHOOK_SECRET`         | Your own secret — set as the custom Authorization header value in Bosta's webhook dashboard settings                                         | any random string                                 |
-| `DEFAULT_SHIPPING_FEE`         | Fallback shipping fee (EGP) used for any governorate that hasn't been configured yet at `/admin/shipping-rates` (optional, defaults to `75`) | `75`                                              |
-| `PAYMOB_SECRET_KEY`            | Paymob secret key (starts `skl_`)                                                                                                            | from Paymob dashboard → Developers                |
-| `PAYMOB_PUBLIC_KEY`            | Paymob public key (starts `pk_`)                                                                                                             | from Paymob dashboard → Developers                |
-| `PAYMOB_HMAC_SECRET`           | Used to verify the payment webhook is genuinely from Paymob                                                                                  | from Paymob dashboard → Developers                |
-| `PAYMOB_INTEGRATION_ID_CARD`   | Integration ID for the card payment method                                                                                                   | from Paymob dashboard → Payment Integrations      |
-| `PAYMOB_INTEGRATION_ID_WALLET` | Integration ID for mobile wallets (e.g. Vodafone Cash)                                                                                       | from Paymob dashboard → Payment Integrations      |
-| `CLOUDINARY_CLOUD_NAME`        | Cloudinary cloud name                                                                                                                        | from Cloudinary dashboard                         |
-| `CLOUDINARY_API_KEY`           | Cloudinary API key                                                                                                                           | from Cloudinary dashboard                         |
-| `CLOUDINARY_API_SECRET`        | Cloudinary API secret — never exposed to the browser                                                                                         | from Cloudinary dashboard                         |
+| Variable                       | Description                                                                                          | Example                                           |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `DATABASE_URL`                 | Postgres connection string                                                                           | `postgresql://user:pass@localhost:5432/techstore` |
+| `AUTH_SECRET`                  | Encrypts Auth.js JWTs/cookies. **Must be named `AUTH_SECRET`**, not `BETTER_AUTH_SECRET`             | generate below                                    |
+| `AUTH_GOOGLE_ID`               | Google OAuth Client ID                                                                               | from Google Cloud Console                         |
+| `AUTH_GOOGLE_SECRET`           | Google OAuth Client Secret                                                                           | from Google Cloud Console                         |
+| `BOSTA_API_KEY`                | Bosta business API key                                                                               | from business.bosta.co → API settings             |
+| `BOSTA_BASE_URL`               | Bosta API base URL (optional, defaults to production)                                                | `https://stg-app.bosta.co` for testing            |
+| `BOSTA_WEBHOOK_SECRET`         | Your own secret — set as the custom Authorization header value in Bosta's webhook dashboard settings | any random string                                 |
+| `PAYMOB_SECRET_KEY`            | Paymob secret key (starts `skl_`)                                                                    | from Paymob dashboard → Developers                |
+| `PAYMOB_PUBLIC_KEY`            | Paymob public key (starts `pk_`)                                                                     | from Paymob dashboard → Developers                |
+| `PAYMOB_HMAC_SECRET`           | Used to verify the payment webhook is genuinely from Paymob                                          | from Paymob dashboard → Developers                |
+| `PAYMOB_INTEGRATION_ID_CARD`   | Integration ID for the card payment method                                                           | from Paymob dashboard → Payment Integrations      |
+| `PAYMOB_INTEGRATION_ID_WALLET` | Integration ID for mobile wallets (e.g. Vodafone Cash)                                               | from Paymob dashboard → Payment Integrations      |
+| `PAYMOB_BASE_URL`              | Paymob API base URL (optional, defaults to `https://accept.paymob.com`)                              | sandbox URL for testing                           |
+| `CLOUDINARY_CLOUD_NAME`        | Cloudinary cloud name                                                                                | from Cloudinary dashboard                         |
+| `CLOUDINARY_API_KEY`           | Cloudinary API key                                                                                   | from Cloudinary dashboard                         |
+| `CLOUDINARY_API_SECRET`        | Cloudinary API secret — never exposed to the browser                                                 | from Cloudinary dashboard                         |
+| `FREE_SHIPPING_THRESHOLD`      | Subtotal (EGP) at/above which shipping is free (optional, default `3000`)                            | `3000`                                            |
+| `DEFAULT_SHIPPING_FEE`         | Fallback flat fee (EGP) if a governorate has no `ShippingRate` row yet (optional, default `75`)      | `75`                                              |
+
+An up-to-date `.env.example` with all of the above (verified against actual `process.env.*` references in the code, not just this table) lives in the project root.
 
 Generate `AUTH_SECRET` (works the same in PowerShell, bash, or macOS):
 
@@ -114,7 +121,7 @@ Coupon code: `WELCOME10`
 
 **One-time prep — before your first deploy:**
 
-Add a `postinstall` hook so Vercel regenerates the Prisma client on every build (Vercel doesn't know to run this otherwise):
+Add a `postinstall` hook so Vercel regenerates the Prisma client on every build (Vercel doesn't know to run this otherwise) — **this is not yet added to `package.json` as of this writing, add it before deploying**:
 
 ```jsonc
 // package.json
@@ -164,7 +171,7 @@ npm install -g vercel
 vercel login
 vercel link          # links this folder to a Vercel project
 
-# Add each env var (repeat for AUTH_SECRET, AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET)
+# Add each env var (repeat for every variable in the table above)
 vercel env add DATABASE_URL production
 vercel env add AUTH_SECRET production
 vercel env add AUTH_GOOGLE_ID production
@@ -188,14 +195,14 @@ Card and mobile wallet payments go through [Paymob](https://accept.paymob.com) (
 
 ## Shipping — Bosta Integration
 
-Bosta is this store's only, default shipping carrier — there's no other carrier option in checkout.
+Shipments are booked automatically through [Bosta](https://business.bosta.co) instead of manual carrier entry.
 
-- The customer picks their governorate, area, and district through three cascading dropdowns backed live by Bosta's own data (`app/api/bosta/cities` → `app/api/bosta/zones` → `app/api/bosta/districts`) — never free text. This matters because Bosta's location model has three real tiers, not two: a governorate (`cityId`) contains many zones, and each **zone** contains many **districts** — `districtId` is what delivery creation actually validates against (confirmed the hard way via Bosta's own `Error 3003: District Not Found` when a zone ID was sent in that field instead). The resolved `cityId`/`districtId` are cached on the address (and snapshotted onto the order at checkout) so later steps never have to re-match a name back to an id.
-- For addresses that predate this three-level flow (no cached ids), `lib/bosta.ts` falls back to matching the saved area name against a zone, then uses the first district within it — not perfectly precise, but always a real, valid district rather than failing.
-- **Shipping cost is calculated before the order is placed**, not after. Bosta doesn't expose a public real-time price-quote API — their business pricing is a negotiated flat-rate card per governorate, set up when you sign up with them — so this app keeps its own `ShippingRate` table (one fee per real Bosta governorate) managed at **`/admin/shipping-rates`**. Checkout (`app/api/checkout/route.ts`) and the live cost preview shown on the checkout page (`app/api/checkout/shipping-cost/route.ts`) both read from this same table via `lib/shipping-cost.ts`, so the price the customer sees is exactly what gets charged. Any governorate without a configured rate falls back to `DEFAULT_SHIPPING_FEE` rather than blocking checkout. Orders over 1000 EGP still ship free, layered on top of the real per-governorate fee.
-- Admin clicks **"Ship with Bosta"** on an order → we call `POST https://app.bosta.co/api/v2/deliveries?apiVersion=1` with the order's cached `cityId`/`districtId` and store the returned `trackingNumber`/`bostaDeliveryId`.
+- Shipping cost is calculated before checkout via a `ShippingRate` table (per-governorate, admin-managed at `/admin/shipping-rates`). Free shipping over `FREE_SHIPPING_THRESHOLD` EGP (default 3000), shown to the customer on the checkout page.
+- Bosta's location model has three real tiers — City → Zone → District — not two. Checkout has three cascading dropdowns (governorate/area/district), all backed by live Bosta data (`/api/bosta/cities`, `/zones`, `/districts`), and the real `districtId` gets cached on the Address/Order so "Ship with Bosta" never has to re-resolve by name.
+- Admin clicks **"Ship with Bosta"** on an order → we call `POST https://app.bosta.co/api/v2/deliveries?apiVersion=1` and store the returned `trackingNumber`/`bostaDeliveryId`.
 - Register your webhook **once** in the Bosta dashboard (Settings → API Integration → Request OTP → Set Up Your Webhook), not per-delivery: URL `https://<your-domain>/api/webhooks/bosta`, plus a custom Authorization header — set its value to your `BOSTA_WEBHOOK_SECRET` (our handler reads it from the `x-webhook-secret` request header).
-- Cancelling an order in the admin also attempts to cancel the Bosta delivery (best-effort — won't block cancellation if Bosta rejects it, e.g. already picked up) and updates the local shipment status to `RETURNED` once Bosta confirms.
+- Cancelling an order in the admin also attempts to cancel the Bosta delivery (best-effort — won't block cancellation if Bosta rejects it, e.g. already picked up).
+- The delivery address only sends a plain `city` name (e.g. "Cairo") — Bosta validates it server-side and returns a clear error if it doesn't match. For more precise routing you can add `zoneId`/`districtId` in `lib/bosta.ts` once you've downloaded Bosta's zoning sheet (linked from [docs.bosta.co/docs/how-to/format-bosta-address](https://docs.bosta.co/docs/how-to/format-bosta-address)) — not required, `city` alone satisfies their API.
 
 ## Known Gotchas (learned the hard way)
 
@@ -205,5 +212,5 @@ Bosta is this store's only, default shipping carrier — there's no other carrie
 - Next.js 16 renamed `middleware.ts` → `proxy.ts` with a named `proxy` export (already done here).
 - `typedRoutes: false` in `next.config.ts` avoids false-positive type errors on dynamic `href` template literals.
 - Prisma 7 does **not** auto-run seeds on `migrate dev`/`migrate deploy` — always run `npx prisma db seed` explicitly.
-- `ShippingRate` starts empty after a fresh clone/seed — checkout still works (via `DEFAULT_SHIPPING_FEE`), but visit `/admin/shipping-rates` and fill in what Bosta actually quoted you per governorate.
-- Bosta's `cancelBostaDelivery`/`getBostaTracking` endpoint shapes in `lib/bosta.ts` haven't been exercised against a real API response yet (unlike `/cities`, `/zones`, and `POST /deliveries`, which have) — if either errors, paste the response back and we'll correct it against what Bosta actually returns.
+- **Migration history drift:** `prisma migrate status`/`migrate dev` trust the `_prisma_migrations` table in the real database, not `schema.prisma` directly. If two migration folders end up describing the same schema change, trust whichever one `migrate status` shows as actually recorded/applied in the DB — not whichever has the earlier timestamp in its folder name. Deleting the wrong one produces a drift error whose only offered fix is `migrate reset` (which drops all data) — don't run that; restore the correct migration file instead.
+- **Windows PowerShell + `Set-Content -Encoding utf8`** silently prepends a UTF-8 BOM. This breaks Postgres's SQL parser during Prisma's shadow-database migration checks (`syntax error at or near ""`). Use `-Encoding ascii` for pure-ASCII SQL files, or `[System.IO.File]::WriteAllText($path, $content, (New-Object System.Text.UTF8Encoding $false))` for files that need real Unicode characters.
